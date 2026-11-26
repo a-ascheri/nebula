@@ -17,7 +17,7 @@ function pad2(n) { return String(n).padStart(2, '0'); }
 
 function get(url, headers) {
     return new Promise((resolve, reject) => {
-        https.get(url, { headers: Object.assign({ 'user-agent': 'Nebula-GitHub-Action/1.0' }, headers || {}) }, res => {
+        const req = https.get(url, { headers: Object.assign({ 'user-agent': 'Nebula-GitHub-Action/1.0' }, headers || {}) }, res => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
                 res.resume();
                 return resolve(get(res.headers.location, headers));
@@ -25,7 +25,10 @@ function get(url, headers) {
             let data = '';
             res.on('data', c => { data += c; });
             res.on('end', () => resolve({ status: res.statusCode, text: data }));
-        }).on('error', reject).setTimeout(15000, () => { this.destroy(new Error('timeout')); });
+        });
+        
+        req.on('error', reject);
+        req.setTimeout(15000, () => req.destroy(new Error('timeout')));
     });
 }
 
