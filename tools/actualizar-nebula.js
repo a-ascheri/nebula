@@ -1,7 +1,6 @@
 // =====================================================================
-// actualizar-nebula.js — Obtiene posiciones ecuatoriales (RA/Dec) de
-// Sol, Luna y planetas desde AstronomyAPI v2 y guarda en nebula-astro.json
-// para que la app los consuma sin gastar cuota ni exponer credenciales.
+// actualizar-nebula.js — Obtiene posiciones de Sol, Luna y planetas
+// desde AstronomyAPI v2, calcula RA/Dec y las guarda en nebula-astro.json
 // =====================================================================
 const fs = require('fs');
 const https = require('https');
@@ -10,7 +9,7 @@ const APP_ID = process.env.NEBULA_APP_ID || '';
 const APP_SECRET = process.env.NEBULA_APP_SECRET || '';
 const API_URL = 'https://api.astronomyapi.com/api/v2/bodies/positions';
 
-// Cuerpos que pedimos a la API (los mismos que usa la app)
+// Cuerpos que pedimos a la API
 const BODIES = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
 
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -26,15 +25,9 @@ function get(url, headers) {
             res.on('data', c => { data += c; });
             res.on('end', () => resolve({ status: res.statusCode, text: data }));
         });
-        
         req.on('error', reject);
         req.setTimeout(15000, () => req.destroy(new Error('timeout')));
     });
-}
-
-function apiGet(path, auth) {
-    return get('https://api.astronomyapi.com' + path + (path.includes('?') ? '&' : '?') + 'key=' + auth)
-        .then(r => JSON.parse(r.text));
 }
 
 function extractEntries(json) {
@@ -60,39 +53,33 @@ function extractEntries(json) {
     return [];
 }
 
-// Intenta extraer RA/Dec (ecuatorial) del sample; si no viene, intenta derivar de horizontal
-function toEquatorial(sample) {
-    const pos = sample.position || sample;
-    // Prioridad 1: equatorial directo si la API lo devuelve
-    if (pos.equatorial) {
-        const ra = parseFloat(pos.equatorial.rightAscension?.degrees || pos.equatorial.ra?.degrees || pos.equatorial.ra);
-        const dec = parseFloat(pos.equatorial.declination?.degrees || pos.equatorial.dec?.degrees || pos.equatorial.dec);
-        if (Number.isFinite(ra) && Number.isFinite(dec)) return { ra, dec };
-    }
-    // Prioridad 2: horizontal + ubicación conocida -> convertir a ecuatorial
-    // Usamos Greenwich (lat 0, lon 0) como referencia si no hay otra
-    if (pos.horizontal) {
-        const alt = parseFloat(pos.horizontal.altitude?.degrees || pos.horizontal.altitude);
-        const az = parseFloat(pos.horizontal.azimuth?.degrees || pos.horizontal.azimuth);
-        const lat = parseFloat(pos.latitude?.degrees || 0);
-        const lon = parseFloat(pos.longitude?.degrees || 0);
-        if (Number.isFinite(alt) && Number.isFinite(az)) {
-            // Conversión horizontal -> ecuatorial (fórmula estándar)
-            const D2R = Math.PI / 180, R2D = 180 / Math.PI;
-            const a = alt * D2R, z = az * D2R, latR = lat * D2R;
-            const sinDec = Math.sin(a) * Math.sin(latR) + Math.cos(a) * Math.cos(latR) * Math.cos(z);
-            const dec = Math.asin(Math.max(-1, Math.min(1, sinDec))) * R2D;
-            const cosDec = Math.cos(dec * D2R);
-            if (cosDec > 1e-6 && Math.abs(Math.cos(latR)) > 1e-6) {
-                const sinH = (-Math.sin(z) * Math.cos(a)) / cosDec;
-                const cosH = (Math.sin(a) - Math.sin(latR) * sinDec) / (Math.cos(latR) * cosDec);
-                const ha = Math.atan2(sinH, cosH) * R2D;
-                // Necesitamos LST (Greenwich) - no la tenemos del sample sin fecha/hora exacta
-                // Como fallback, devolvemos solo horizontal si no podemos derivar RA
-            }
-        }
-    }
-    return null;
+// --- FUNCIONES MATEMÁTICAS PARA CONVERTIR HORIZONTAL A ECUATORIAL ---
+
+/** Días desde J2000.0 */
+function daysFromJ2000(ms) {
+    return ms / 86400000 + 2440587.5 - 2451545.0;
+}
+
+/** Tiempo sidéreo medio de Greenwich (grados) */
+function gmstDeg(d) {
+    return ((280.46061837 + 360.98564736629 * d) % 360 + 360) % 360;
+}
+
+/** Convierte Alt/Az (desde Greenwich) a RA/Dec usando la hora exacta */
+function horizontalToEquatorial(altDeg, azDeg, latDeg, lonDeg, d) {
+    const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+    const alt = altDeg * D2R, az = azDeg * D2R, lat = latDeg * D2R;
+    const sinDec = Math.sin(alt) * Math.sin(lat) + Math.cos(alt) * Math.cos(lat) * Math.cos(az);
+    const dec = Math.asin(Math.max(-1, Math.min(1, sinDec)));
+    const cosDec = Math.cos(dec);
+    if (Math.abs(Math.cos(lat)) < 1e-8 || cosDec < 1e-8) return null;
+    const sinH = (-Math.sin(az) * Math.cos(alt)) / cosDec;
+    const cosH = (Math.sin(alt) - Math.sin(lat) * sinDec) / (Math.cos(lat) * cosDec);
+    const ha = Math.atan2(sinH, cosH) * R2D;
+    return {
+        dec: dec * R2D,
+        ra: ((gmstDeg(d) + lonDeg - ha) % 360 + 360) % 360
+    };
 }
 
 async function fetchEphemeris() {
@@ -101,24 +88,20 @@ async function fetchEphemeris() {
     const time = `${pad2(now.getUTCHours())}:${pad2(now.getUTCMinutes())}:${pad2(now.getUTCSeconds())}`;
 
     const params = new URLSearchParams({
-        latitude: '0',          // Greenwich como referencia
+        latitude: '0',
         longitude: '0',
         elevation: '0',
         from_date: date,
         to_date: date,
-        time,
-        // Pedimos coordenadas ecuatoriales si la API lo soporta (parámetro no documentado pero probado)
-        format: 'json'
+        time
     });
 
     const auth = Buffer.from(`${APP_ID}:${APP_SECRET}`).toString('base64');
-
     const url = `${API_URL}?${params.toString()}`;
     const res = await get(url, { Authorization: `Basic ${auth}` });
 
     if (res.status !== 200) {
-        const errMsg = `API HTTP ${res.status}: ${res.text.slice(0, 200)}`;
-        throw new Error(errMsg);
+        throw new Error(`API HTTP ${res.status}: ${res.text.slice(0, 200)}`);
     }
 
     const json = JSON.parse(res.text);
@@ -131,51 +114,43 @@ async function fetchEphemeris() {
         bodies: {}
     };
 
+    const d = daysFromJ2000(now.getTime());
+
     for (const entry of entries) {
         if (!entry.sample) continue;
         const name = entry.name;
         if (!BODIES.includes(name)) continue;
 
         const pos = entry.sample.position || entry.sample;
-        const equatorial = pos.equatorial;
         const horizontal = pos.horizontal;
 
+        if (!horizontal) continue;
+
+        const alt = parseFloat(horizontal.altitude?.degrees || horizontal.altitude);
+        const az = parseFloat(horizontal.azimuth?.degrees || horizontal.azimuth);
+
+        if (!Number.isFinite(alt) || !Number.isFinite(az)) continue;
+
+        // Calculamos la RA/Dec a partir de la posición horizontal de Greenwich
+        // (lat 0, lon 0) y la hora exacta
+        const eq = horizontalToEquatorial(alt, az, 0, 0, d);
+        
         const bodyData = { name };
-
-        // Si vino ecuatorial directo, úsalo
-        if (equatorial) {
-            const ra = parseFloat(equatorial.rightAscension?.degrees || equatorial.ra?.degrees || equatorial.ra);
-            const dec = parseFloat(equatorial.declination?.degrees || equatorial.dec?.degrees || equatorial.dec);
-            if (Number.isFinite(ra) && Number.isFinite(dec)) {
-                bodyData.equatorial = { ra, dec };
-            }
+        
+        if (eq && Number.isFinite(eq.ra) && Number.isFinite(eq.dec)) {
+            bodyData.equatorial = { ra: eq.ra, dec: eq.dec };
         }
+        
+        // Guardamos el horizontal de Greenwich como respaldo
+        bodyData.horizontalGreenwich = { alt, az };
 
-        // Siempre guardamos horizontal de Greenwich como respaldo
-        if (horizontal) {
-            const alt = parseFloat(horizontal.altitude?.degrees || horizontal.altitude);
-            const az = parseFloat(horizontal.azimuth?.degrees || horizontal.azimuth);
-            if (Number.isFinite(alt) && Number.isFinite(az)) {
-                bodyData.horizontalGreenwich = { alt, az };
-            }
-        }
-
-        // Distancia si viene
+        // Distancia
         const dist = pos.distance || (entry.sample.positions && entry.sample.positions.distance);
         if (dist && dist.astronomical) {
             bodyData.distanceAU = parseFloat(dist.astronomical);
         }
 
-        // Magnitud aparente si viene
-        if (pos.apparentMagnitude !== undefined) {
-            bodyData.magnitude = parseFloat(pos.apparentMagnitude);
-        } else if (pos.magnitude !== undefined) {
-            bodyData.magnitude = parseFloat(pos.magnitude);
-        }
-
-        if (bodyData.equatorial || bodyData.horizontalGreenwich) {
-            result.bodies[name] = bodyData;
-        }
+        result.bodies[name] = bodyData;
     }
 
     return result;
@@ -193,10 +168,9 @@ async function fetchEphemeris() {
         const data = await fetchEphemeris();
         const count = Object.keys(data.bodies).length;
         fs.writeFileSync('nebula-astro.json', JSON.stringify(data, null, 2));
-        console.log(`nebula-astro.json actualizado: ${count} cuerpos (${Object.keys(data.bodies).join(', ')})`);
+        console.log(`nebula-astro.json actualizado: ${count} cuerpos`);
     } catch (e) {
         console.error('Error:', e.message);
-        // No fallar el workflow: el JSON anterior sigue vigente
     }
 
     process.exit(0);
