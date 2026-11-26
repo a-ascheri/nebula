@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-26T20:43:49.144Z",
+  "timestamp": "2026-11-26T20:53:24.865Z",
   "source": "AstronomyAPI v2",
   "referenceLocation": {
     "latitude": 0,
@@ -9,71 +9,71 @@
     "Sun": {
       "name": "Sun",
       "horizontalGreenwich": {
-        "alt": -40.15,
-        "az": 241.8
+        "alt": -42.26,
+        "az": 240.78
       }
     },
     "Moon": {
       "name": "Moon",
       "horizontalGreenwich": {
-        "alt": 7.84,
-        "az": 62.64
+        "alt": 9.86,
+        "az": 62.47
       }
     },
     "Mercury": {
       "name": "Mercury",
       "horizontalGreenwich": {
-        "alt": -58.72,
-        "az": 240.31
+        "alt": -60.79,
+        "az": 238.19
       }
     },
     "Venus": {
       "name": "Venus",
       "horizontalGreenwich": {
-        "alt": -78,
-        "az": 219.14
+        "alt": -79.36,
+        "az": 209.13
       }
     },
     "Mars": {
       "name": "Mars",
       "horizontalGreenwich": {
-        "alt": -44.53,
-        "az": 70.91
+        "alt": -42.24,
+        "az": 71.64
       }
     },
     "Jupiter": {
       "name": "Jupiter",
       "horizontalGreenwich": {
-        "alt": -40.6,
-        "az": 72.15
+        "alt": -38.29,
+        "az": 72.75
       }
     },
     "Saturn": {
       "name": "Saturn",
       "horizontalGreenwich": {
-        "alt": 81.69,
-        "az": 275.71
+        "alt": 79.3,
+        "az": 274.44
       }
     },
     "Uranus": {
       "name": "Uranus",
       "horizontalGreenwich": {
-        "alt": 41.5,
-        "az": 61.8
+        "alt": 43.61,
+        "az": 60.74
       }
     },
     "Neptune": {
       "name": "Neptune",
       "horizontalGreenwich": {
-        "alt": 75.35,
-        "az": 267.58
+        "alt": 72.95,
+        "az": 267.92
       }
     },
     "Pluto": {
       "name": "Pluto",
       "horizontalGreenwich": {
-        "alt": 18.43,
-        "az": 245.14
+        "alt": 16.26,
+        "az": 245.45
       }
     }
   }
