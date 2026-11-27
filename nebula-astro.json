@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-27T15:36:32.555Z",
+  "timestamp": "2026-11-27T15:44:42.000Z",
   "source": "AstronomyAPI v2",
   "referenceLocation": {
     "latitude": 0,
@@ -9,111 +9,111 @@
     "Sun": {
       "name": "Sun",
       "equatorial": {
-        "ra": 243.50675069604563,
-        "dec": -21.198180793793377
+        "ra": 243.5173965557882,
+        "dec": -21.194822133148406
       },
       "horizontalGreenwich": {
-        "alt": 30.34,
-        "az": 245.23
+        "alt": 28.49,
+        "az": 245.71
       }
     },
     "Moon": {
       "name": "Moon",
       "equatorial": {
-        "ra": 109.97259457436076,
-        "dec": 24.93622662857716
+        "ra": 110.08196110565802,
+        "dec": 24.921246254445553
       },
       "horizontalGreenwich": {
-        "alt": -62.99,
-        "az": 21.82
+        "alt": -62.23,
+        "az": 25.26
       }
     },
     "Mercury": {
       "name": "Mercury",
       "equatorial": {
-        "ra": 225.46654240651833,
-        "dec": -15.167066098224538
+        "ra": 225.47711224024158,
+        "dec": -15.175779362268637
       },
       "horizontalGreenwich": {
-        "alt": 14.24,
-        "az": 254.34
+        "alt": 12.28,
+        "az": 254.46
       }
     },
     "Venus": {
       "name": "Venus",
       "equatorial": {
-        "ra": 205.33127346242816,
-        "dec": -9.239976868620428
+        "ra": 205.31912070782664,
+        "dec": -9.243164343800064
       },
       "horizontalGreenwich": {
-        "alt": -5.3,
-        "az": 260.72
+        "alt": -7.33,
+        "az": 260.68
       }
     },
     "Mars": {
       "name": "Mars",
       "equatorial": {
-        "ra": 153.76664854589603,
-        "dec": 13.401011020133872
+        "ra": 153.7605247472361,
+        "dec": 13.403549736210381
       },
       "horizontalGreenwich": {
-        "alt": -54.61,
-        "az": 293.59
+        "alt": -56.48,
+        "az": 294.82
       }
     },
     "Jupiter": {
       "name": "Jupiter",
       "equatorial": {
-        "ra": 149.3602416863955,
-        "dec": 13.464952821798455
+        "ra": 149.3351455364898,
+        "dec": 13.462768825433082
       },
       "horizontalGreenwich": {
-        "alt": -58.58,
-        "az": 296.53
+        "alt": -60.42,
+        "az": 298.14
       }
     },
     "Saturn": {
       "name": "Saturn",
       "equatorial": {
-        "ra": 8.418725950810995,
-        "dec": 0.823549723350529
+        "ra": 8.413435256715445,
+        "dec": 0.8200631903031222
       },
       "horizontalGreenwich": {
-        "alt": 22.28,
-        "az": 89.11
+        "alt": 24.33,
+        "az": 89.1
       }
     },
     "Uranus": {
       "name": "Uranus",
       "equatorial": {
-        "ra": 61.15658889837982,
-        "dec": 20.816689816373582
+        "ra": 61.13866755246431,
+        "dec": 20.81369174053208
       },
       "horizontalGreenwich": {
-        "alt": -28.28,
-        "az": 66.2
+        "alt": -26.39,
+        "az": 66.63
       }
     },
     "Neptune": {
       "name": "Neptune",
       "equatorial": {
-        "ra": 2.069352758974844,
-        "dec": -0.614409039498674
+        "ra": 2.074158881681342,
+        "dec": -0.6106807592752238
       },
       "horizontalGreenwich": {
-        "alt": 28.63,
-        "az": 90.7
+        "alt": 30.67,
+        "az": 90.71
       }
     },
     "Pluto": {
       "name": "Pluto",
       "equatorial": {
-        "ra": 306.87590328964575,
-        "dec": -23.507133778903885
+        "ra": 306.8740586129461,
+        "dec": -23.500473236905137
       },
       "horizontalGreenwich": {
-        "alt": 65.74,
-        "az": 166.11
+        "alt": 66.16,
+        "az": 170.6
       }
     }
   }
